@@ -124,26 +124,25 @@ function Dashboard() {
   ).length;
 
   const overdueTasks = tasks.filter(
-    (task) => {
-      if (
-        !task.dueDate ||
-        task.status === "done"
-      ) {
-        return false;
-      }
-
-      const dueDate = new Date(
-        task.dueDate
-      );
-
-      const today = new Date();
-
-      dueDate.setHours(0, 0, 0, 0);
-      today.setHours(0, 0, 0, 0);
-
-      return dueDate < today;
+  (task) => {
+    if (
+      !task.dueDate ||
+      task.status === "done"
+    ) {
+      return false;
     }
-  ).length;
+
+    const dueDate = new Date(task.dueDate)
+      .toISOString()
+      .split("T")[0];
+
+    const today = new Date()
+      .toISOString()
+      .split("T")[0];
+
+    return dueDate < today;
+  }
+).length;
 
   return (
     <div
@@ -388,12 +387,14 @@ function Dashboard() {
               projectTasks.map(
                 (task) => {
                   const isOverdue =
-                    task?.dueDate &&
-                    new Date(
-                      task.dueDate
-                    ) < new Date() &&
-                    task.status !==
-                      "done";
+  task?.dueDate &&
+  task.status !== "done" &&
+  new Date(task.dueDate)
+    .toISOString()
+    .split("T")[0] <
+    new Date()
+      .toISOString()
+      .split("T")[0];
 
                   return (
                     <div

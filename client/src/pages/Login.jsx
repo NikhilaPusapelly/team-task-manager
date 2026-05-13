@@ -1,6 +1,7 @@
 import { useState } from "react";
 import API from "../api/axios";
 import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function Login() {
 
@@ -71,6 +72,12 @@ localStorage.setItem(
       >
 
         <h2>Login</h2>
+        <p>
+  Don't have an account?{" "}
+  <Link to="/signup">
+    Signup
+  </Link>
+</p>
 
         <input
           type="email"

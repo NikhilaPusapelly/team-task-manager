@@ -1,7 +1,10 @@
 import { useState } from "react";
 import API from "../api/axios";
+import { useNavigate, Link } from "react-router-dom";
 
 function Signup() {
+
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -23,14 +26,14 @@ function Signup() {
 
     try {
 
-      const res = await API.post(
+      await API.post(
         "/auth/signup",
         formData
       );
 
       alert("Signup Successful");
 
-      console.log(res.data);
+      navigate("/");
 
     } catch (error) {
 
@@ -43,49 +46,103 @@ function Signup() {
   return (
     <div
       style={{
+        height: "100vh",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        height: "100vh",
+        backgroundColor: "#f4f6f9",
       }}
     >
 
       <form
         onSubmit={handleSubmit}
         style={{
+          width: "350px",
+          background: "white",
+          padding: "30px",
+          borderRadius: "10px",
+          boxShadow: "0 0 10px rgba(0,0,0,0.1)",
           display: "flex",
           flexDirection: "column",
-          width: "300px",
-          gap: "10px",
+          gap: "15px",
         }}
       >
 
-        <h2>Signup</h2>
+        <h2
+          style={{
+            textAlign: "center",
+            color: "#333",
+          }}
+        >
+          Create Account
+        </h2>
+
+        <p style={{ textAlign: "center" }}>
+          Already have an account?{" "}
+          <Link to="/">
+            Login
+          </Link>
+        </p>
 
         <input
           type="text"
           name="name"
           placeholder="Enter Name"
+          value={formData.name}
           onChange={handleChange}
+          required
+          style={{
+            padding: "12px",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+            width: "100%",
+            boxSizing: "border-box",
+          }}
         />
 
         <input
           type="email"
           name="email"
           placeholder="Enter Email"
+          value={formData.email}
           onChange={handleChange}
+          required
+          style={{
+            padding: "12px",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+            width: "100%",
+            boxSizing: "border-box",
+          }}
         />
 
         <input
           type="password"
           name="password"
           placeholder="Enter Password"
+          value={formData.password}
           onChange={handleChange}
+          required
+          style={{
+            padding: "12px",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+            width: "100%",
+            boxSizing: "border-box",
+          }}
         />
 
         <select
           name="role"
+          value={formData.role}
           onChange={handleChange}
+          style={{
+            padding: "12px",
+            borderRadius: "5px",
+            border: "1px solid #ccc",
+            width: "100%",
+            boxSizing: "border-box",
+          }}
         >
           <option value="member">
             Member
@@ -96,7 +153,19 @@ function Signup() {
           </option>
         </select>
 
-        <button type="submit">
+        <button
+          type="submit"
+          style={{
+            padding: "12px",
+            backgroundColor: "#4f46e5",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+            fontSize: "16px",
+            width: "100%",
+          }}
+        >
           Signup
         </button>
 

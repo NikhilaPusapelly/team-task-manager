@@ -3,6 +3,7 @@ import API from "../api/axios";
 import { useNavigate, Link } from "react-router-dom";
 
 function Login() {
+
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -18,9 +19,11 @@ function Login() {
   };
 
   const handleSubmit = async (e) => {
+
     e.preventDefault();
 
     try {
+
       const res = await API.post(
         "/auth/login",
         formData
@@ -31,10 +34,17 @@ function Login() {
         res.data.token
       );
 
+      localStorage.setItem(
+        "role",
+        res.data.user.role
+      );
+
       navigate("/dashboard");
 
     } catch (error) {
+
       console.log(error);
+
       alert("Login Failed");
     }
   };
@@ -49,6 +59,7 @@ function Login() {
         backgroundColor: "#f4f6f9",
       }}
     >
+
       <form
         onSubmit={handleSubmit}
         style={{
@@ -62,10 +73,12 @@ function Login() {
           gap: "15px",
         }}
       >
+
         <h2
           style={{
             textAlign: "center",
             color: "#333",
+            marginBottom: "10px",
           }}
         >
           Team Task Manager
@@ -82,11 +95,16 @@ function Login() {
           type="email"
           name="email"
           placeholder="Enter Email"
+          value={formData.email}
           onChange={handleChange}
+          required
           style={{
             padding: "12px",
             borderRadius: "5px",
             border: "1px solid #ccc",
+            width: "100%",
+            boxSizing: "border-box",
+            fontSize: "15px",
           }}
         />
 
@@ -94,11 +112,16 @@ function Login() {
           type="password"
           name="password"
           placeholder="Enter Password"
+          value={formData.password}
           onChange={handleChange}
+          required
           style={{
             padding: "12px",
             borderRadius: "5px",
             border: "1px solid #ccc",
+            width: "100%",
+            boxSizing: "border-box",
+            fontSize: "15px",
           }}
         />
 
@@ -112,11 +135,14 @@ function Login() {
             borderRadius: "5px",
             cursor: "pointer",
             fontSize: "16px",
+            width: "100%",
           }}
         >
           Login
         </button>
+
       </form>
+
     </div>
   );
 }

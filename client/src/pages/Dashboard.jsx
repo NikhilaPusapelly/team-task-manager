@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import API from "../api/axios";
 
 function Dashboard() {
-
   const [projects, setProjects] = useState([]);
   const [tasks, setTasks] = useState([]);
 
@@ -11,40 +10,28 @@ function Dashboard() {
 
   // Fetch Data
   const fetchData = async () => {
-
     try {
+      const projectRes = await API.get("/projects", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-      const projectRes = await API.get(
-        "/projects",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const taskRes = await API.get(
-        "/tasks",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const taskRes = await API.get("/tasks", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       setProjects(projectRes.data);
       setTasks(taskRes.data);
-
     } catch (error) {
-
       console.log(error);
     }
   };
 
   useEffect(() => {
-
     fetchData();
-
   }, []);
 
   // Update Task Status
@@ -52,9 +39,7 @@ function Dashboard() {
     taskId,
     status
   ) => {
-
     try {
-
       await API.put(
         `/tasks/${taskId}`,
         { status },
@@ -66,31 +51,28 @@ function Dashboard() {
       );
 
       fetchData();
-
     } catch (error) {
-
       console.log(error);
     }
   };
 
   // Delete Task
   const deleteTask = async (taskId) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this task?"
+    );
+
+    if (!confirmDelete) return;
 
     try {
-
-      await API.delete(
-        `/tasks/${taskId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      await API.delete(`/tasks/${taskId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       fetchData();
-
     } catch (error) {
-
       console.log(error);
     }
   };
@@ -99,9 +81,13 @@ function Dashboard() {
   const deleteProject = async (
     projectId
   ) => {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this project?"
+    );
+
+    if (!confirmDelete) return;
 
     try {
-
       await API.delete(
         `/projects/${projectId}`,
         {
@@ -112,16 +98,13 @@ function Dashboard() {
       );
 
       fetchData();
-
     } catch (error) {
-
       console.log(error);
     }
   };
 
   // Logout
   const handleLogout = () => {
-
     localStorage.removeItem("token");
     localStorage.removeItem("role");
 
@@ -141,23 +124,35 @@ function Dashboard() {
   ).length;
 
   const overdueTasks = tasks.filter(
-    (task) =>
-      task.dueDate &&
-      new Date(task.dueDate) <
-        new Date() &&
-      task.status !== "done"
+    (task) => {
+      if (
+        !task.dueDate ||
+        task.status === "done"
+      ) {
+        return false;
+      }
+
+      const dueDate = new Date(
+        task.dueDate
+      );
+
+      const today = new Date();
+
+      dueDate.setHours(0, 0, 0, 0);
+      today.setHours(0, 0, 0, 0);
+
+      return dueDate < today;
+    }
   ).length;
 
   return (
-   <div
-  style={{
-    padding: "40px",
-    backgroundColor: "#f1f5f9",
-    minHeight: "100vh",
-    minHeight: "100vh",
-  }}
->
-
+    <div
+      style={{
+        padding: "40px",
+        backgroundColor: "#f1f5f9",
+        minHeight: "100vh",
+      }}
+    >
       {/* Header */}
       <div
         style={{
@@ -166,13 +161,15 @@ function Dashboard() {
             "space-between",
           alignItems: "center",
           marginBottom: "30px",
+          flexWrap: "wrap",
+          gap: "15px",
         }}
       >
-
         <h1
           style={{
-            fontSize: "52px",
+            fontSize: "42px",
             color: "#0f172a",
+            margin: 0,
           }}
         >
           Team Task Manager
@@ -188,11 +185,11 @@ function Dashboard() {
             borderRadius: "10px",
             cursor: "pointer",
             fontWeight: "bold",
+            fontSize: "15px",
           }}
         >
           Logout
         </button>
-
       </div>
 
       {/* Admin Buttons */}
@@ -202,17 +199,16 @@ function Dashboard() {
             display: "flex",
             gap: "15px",
             marginBottom: "30px",
+            flexWrap: "wrap",
           }}
         >
-
           <button
             onClick={() =>
-              window.location.href =
-                "/create-project"
+              (window.location.href =
+                "/create-project")
             }
             style={{
-              backgroundColor:
-                "#2563eb",
+              backgroundColor: "#2563eb",
               color: "white",
               border: "none",
               padding: "14px 20px",
@@ -227,12 +223,11 @@ function Dashboard() {
 
           <button
             onClick={() =>
-              window.location.href =
-                "/create-task"
+              (window.location.href =
+                "/create-task")
             }
             style={{
-              backgroundColor:
-                "#10b981",
+              backgroundColor: "#10b981",
               color: "white",
               border: "none",
               padding: "14px 20px",
@@ -244,7 +239,6 @@ function Dashboard() {
           >
             + Create Task
           </button>
-
         </div>
       )}
 
@@ -258,104 +252,55 @@ function Dashboard() {
           marginBottom: "35px",
         }}
       >
-
-        {/* Total */}
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "25px",
-            borderRadius: "18px",
-            boxShadow:
-              "0 4px 12px rgba(0,0,0,0.08)",
-          }}
-        >
-          <h3>Total Tasks</h3>
-
-          <h1
+        {[
+          {
+            title: "Total Tasks",
+            value: totalTasks,
+            color: "#2563eb",
+          },
+          {
+            title: "Completed",
+            value: completedTasks,
+            color: "#22c55e",
+          },
+          {
+            title: "In Progress",
+            value: inProgressTasks,
+            color: "#f59e0b",
+          },
+          {
+            title: "Overdue",
+            value: overdueTasks,
+            color: "#ef4444",
+          },
+        ].map((item, index) => (
+          <div
+            key={index}
             style={{
-              fontSize: "42px",
-              marginTop: "10px",
-              color: "#2563eb",
+              backgroundColor: "white",
+              padding: "25px",
+              borderRadius: "18px",
+              boxShadow:
+                "0 4px 12px rgba(0,0,0,0.08)",
             }}
           >
-            {totalTasks}
-          </h1>
-        </div>
+            <h3>{item.title}</h3>
 
-        {/* Completed */}
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "25px",
-            borderRadius: "18px",
-            boxShadow:
-              "0 4px 12px rgba(0,0,0,0.08)",
-          }}
-        >
-          <h3>Completed</h3>
-
-          <h1
-            style={{
-              fontSize: "42px",
-              marginTop: "10px",
-              color: "#22c55e",
-            }}
-          >
-            {completedTasks}
-          </h1>
-        </div>
-
-        {/* Progress */}
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "25px",
-            borderRadius: "18px",
-            boxShadow:
-              "0 4px 12px rgba(0,0,0,0.08)",
-          }}
-        >
-          <h3>In Progress</h3>
-
-          <h1
-            style={{
-              fontSize: "42px",
-              marginTop: "10px",
-              color: "#f59e0b",
-            }}
-          >
-            {inProgressTasks}
-          </h1>
-        </div>
-
-        {/* Overdue */}
-        <div
-          style={{
-            backgroundColor: "white",
-            padding: "25px",
-            borderRadius: "18px",
-            boxShadow:
-              "0 4px 12px rgba(0,0,0,0.08)",
-          }}
-        >
-          <h3>Overdue</h3>
-
-          <h1
-            style={{
-              fontSize: "42px",
-              marginTop: "10px",
-              color: "#ef4444",
-            }}
-          >
-            {overdueTasks}
-          </h1>
-        </div>
-
+            <h1
+              style={{
+                fontSize: "42px",
+                marginTop: "10px",
+                color: item.color,
+              }}
+            >
+              {item.value}
+            </h1>
+          </div>
+        ))}
       </div>
 
       {/* Projects */}
       {projects.map((project) => {
-
         const projectTasks =
           tasks.filter(
             (task) =>
@@ -367,16 +312,15 @@ function Dashboard() {
         return (
           <div
             key={project._id}
-           style={{
-  backgroundColor: "white",
-  padding: "30px",
-  borderRadius: "20px",
-  marginBottom: "30px",
-  boxShadow:
-    "0 4px 15px rgba(0,0,0,0.08)",
-}}
+            style={{
+              backgroundColor: "white",
+              padding: "30px",
+              borderRadius: "20px",
+              marginBottom: "30px",
+              boxShadow:
+                "0 4px 15px rgba(0,0,0,0.08)",
+            }}
           >
-
             <h2
               style={{
                 fontSize: "34px",
@@ -389,7 +333,7 @@ function Dashboard() {
 
             <p
               style={{
-                fontSize: "19px",
+                fontSize: "18px",
                 color: "#475569",
               }}
             >
@@ -398,7 +342,6 @@ function Dashboard() {
 
             <br />
 
-            {/* Delete Project */}
             {role === "admin" && (
               <button
                 onClick={() =>
@@ -439,206 +382,185 @@ function Dashboard() {
                   marginTop: "10px",
                 }}
               >
-                No tasks available for
-                this project
+                No tasks available
               </p>
             ) : (
               projectTasks.map(
-                (task) => (
-                  <div
-                    key={task._id}
-                    style={{
-  border:
-    "1px solid #e2e8f0",
-  padding: "20px",
-  borderRadius:
-    "14px",
-  marginTop: "18px",
-  backgroundColor:
-    "#f8fafc",
-}}
-                  >
+                (task) => {
+                  const isOverdue =
+                    task?.dueDate &&
+                    new Date(
+                      task.dueDate
+                    ) < new Date() &&
+                    task.status !==
+                      "done";
 
-                    <h4
+                  return (
+                    <div
+                      key={task._id}
                       style={{
-                        fontSize: "22px",
-                        marginBottom:
-                          "8px",
-                        color: "#0f172a",
+                        border:
+                          "1px solid #e2e8f0",
+                        padding: "20px",
+                        borderRadius:
+                          "14px",
+                        marginTop: "18px",
+                        backgroundColor:
+                          "#f8fafc",
                       }}
                     >
-                      {task.title}
-                    </h4>
+                      <h4
+                        style={{
+                          fontSize: "22px",
+                          marginBottom:
+                            "8px",
+                        }}
+                      >
+                        {task.title}
+                      </h4>
 
-                    <p
-                      style={{
-                        fontSize: "16px",
-                        color: "#475569",
-                        marginBottom:
-                          "10px",
-                      }}
-                    >
-                      {
-                        task.description
-                      }
-                    </p>
+                      <p
+                        style={{
+                          color: "#475569",
+                        }}
+                      >
+                        {
+                          task.description
+                        }
+                      </p>
 
-                    {/* Due Date */}
-                    <p>
-                      Due:{" "}
-                      {task?.dueDate
-                        ? new Date(
-                            task.dueDate
-                          ).toLocaleDateString()
-                        : "No Due Date"}
-                    </p>
+                      <p>
+                        Due:{" "}
+                        {task?.dueDate
+                          ? new Date(
+                              task.dueDate
+                            ).toLocaleDateString()
+                          : "No Due Date"}
+                      </p>
 
-                    {/* Overdue */}
-                    {task?.dueDate &&
-                      !isNaN(
-                        new Date(
-                          task.dueDate
-                        )
-                      ) &&
-                      new Date(
-                        task.dueDate
-                      ) <
-                        new Date() &&
-                      task.status !==
-                        "done" && (
+                      {isOverdue && (
                         <p
                           style={{
-                            color:
-                              "red",
+                            color: "red",
                             fontWeight:
                               "bold",
-                            marginTop:
-                              "5px",
                           }}
                         >
                           Overdue
                         </p>
                       )}
 
-                    {/* Assigned */}
-                    <p>
-                      Assigned To:{" "}
-                      <strong>
-                        {task
-                          .assignedTo
-                          ?.name ||
-                          "Unassigned"}
-                      </strong>
-                    </p>
+                      <p>
+                        Assigned To:{" "}
+                        <strong>
+                          {task
+                            .assignedTo
+                            ?.name ||
+                            "Unassigned"}
+                        </strong>
+                      </p>
 
-                    {/* Status Badge */}
-                    <p
-                      style={{
-                        display:
-                          "inline-block",
-                        backgroundColor:
-                          task.status ===
-                          "done"
-                            ? "#22c55e"
-                            : task.status ===
-                              "in-progress"
-                            ? "#f59e0b"
-                            : "#ef4444",
-                        color: "white",
-                        padding:
-                          "6px 12px",
-                        borderRadius:
-                          "20px",
-                        fontSize:
-                          "14px",
-                        fontWeight:
-                          "bold",
-                      }}
-                    >
-                      {task.status}
-                    </p>
-
-                    <br />
-                    <br />
-
-                    {/* Status Dropdown */}
-                    <select
-                      value={
-                        task.status
-                      }
-                      onChange={(e) =>
-                        updateTaskStatus(
-                          task._id,
-                          e.target
-                            .value
-                        )
-                      }
-                      style={{
-                        padding:
-                          "10px",
-                        borderRadius:
-                          "8px",
-                        border:
-                          "1px solid #ccc",
-                      }}
-                    >
-
-                      <option value="todo">
-                        Todo
-                      </option>
-
-                      <option value="in-progress">
-                        In Progress
-                      </option>
-
-                      <option value="done">
-                        Done
-                      </option>
-
-                    </select>
-
-                    <br />
-                    <br />
-
-                    {/* Delete Task */}
-                    {role ===
-                      "admin" && (
-                      <button
-                        onClick={() =>
-                          deleteTask(
-                            task._id
-                          )
-                        }
+                      <p
                         style={{
+                          display:
+                            "inline-block",
                           backgroundColor:
-                            "#dc2626",
-                          color:
-                            "white",
-                          border:
-                            "none",
+                            task.status ===
+                            "done"
+                              ? "#22c55e"
+                              : task.status ===
+                                "in-progress"
+                              ? "#f59e0b"
+                              : "#3b82f6",
+                          color: "white",
                           padding:
-                            "10px 16px",
+                            "6px 12px",
                           borderRadius:
-                            "10px",
-                          cursor:
-                            "pointer",
+                            "20px",
+                          fontSize:
+                            "14px",
                           fontWeight:
                             "bold",
                         }}
                       >
-                        Delete Task
-                      </button>
-                    )}
+                        {task.status}
+                      </p>
 
-                  </div>
-                )
+                      <br />
+                      <br />
+
+                      <select
+                        value={
+                          task.status
+                        }
+                        onChange={(e) =>
+                          updateTaskStatus(
+                            task._id,
+                            e.target
+                              .value
+                          )
+                        }
+                        style={{
+                          padding:
+                            "10px",
+                          borderRadius:
+                            "8px",
+                          border:
+                            "1px solid #ccc",
+                        }}
+                      >
+                        <option value="todo">
+                          Todo
+                        </option>
+
+                        <option value="in-progress">
+                          In Progress
+                        </option>
+
+                        <option value="done">
+                          Done
+                        </option>
+                      </select>
+
+                      <br />
+                      <br />
+
+                      {role ===
+                        "admin" && (
+                        <button
+                          onClick={() =>
+                            deleteTask(
+                              task._id
+                            )
+                          }
+                          style={{
+                            backgroundColor:
+                              "#dc2626",
+                            color:
+                              "white",
+                            border:
+                              "none",
+                            padding:
+                              "10px 16px",
+                            borderRadius:
+                              "10px",
+                            cursor:
+                              "pointer",
+                            fontWeight:
+                              "bold",
+                          }}
+                        >
+                          Delete Task
+                        </button>
+                      )}
+                    </div>
+                  );
+                }
               )
             )}
-
           </div>
         );
       })}
-
     </div>
   );
 }
